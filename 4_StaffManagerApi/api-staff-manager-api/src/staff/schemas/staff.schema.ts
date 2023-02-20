@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document,Types  } from 'mongoose';
+import mongoose, { Document,Types  } from 'mongoose';
+
+
 
 export type StaffDocument = Staff & Document;
 
@@ -59,7 +61,9 @@ export class Staff {
   @Prop()
   office_equiqmentId: Types.ObjectId;
 
-
+  @Prop()
+  roleId:Types.ObjectId;
 }
+
 
 export const StaffSchema = SchemaFactory.createForClass(Staff);

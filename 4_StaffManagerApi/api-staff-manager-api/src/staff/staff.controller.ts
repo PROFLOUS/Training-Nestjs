@@ -1,5 +1,10 @@
-import { Body, CacheInterceptor, CacheKey, CacheTTL, Controller, Delete, Get, Param, Patch, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, CacheInterceptor, CacheKey, CacheTTL, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Request } from 'express';
+import { Roles } from 'src/auth/roles/roles.decorator';
+import { RolesGuard } from 'src/auth/roles/roles.guard';
+import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
+
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { StaffService } from './staff.service';
 
@@ -17,11 +22,13 @@ export class StaffController {
         return this.staffService.create(createStaffDto);
     }
 
-    @UseInterceptors(CacheInterceptor)
-    @CacheKey('staffAll')
-    @CacheTTL(30)
+    // @UseInterceptors(CacheInterceptor)
+    // @CacheKey('staffAll')
+    // @CacheTTL(30)
+    @Roles('ADMIN')
+    @UseGuards(AccessTokenGuard,RolesGuard)    
     @Get()
-    async findAll() {
+    async findAll(@Req() req:Request) {
         return this.staffService.findAll();
     }
 
@@ -45,4 +52,25 @@ export class StaffController {
         console.log(id);
         return this.staffService.remove(id);
     }
+
+    @Patch('active/:id')
+    async active(@Param('id') id:string, @Req() req:Request) {
+        const {isActived} = req.body;
+        return this.staffService.updateIsActived(id,isActived);
+    }
+
+    @Patch('change-password/:id')
+    async changePassword(@Param('id') id:string, @Req() req:Request) {
+        const {password} = req.body;
+        const {newPassword} = req.body;
+        return this.staffService.updatePassword(id,password,newPassword);
+    }
+
+    @Patch('change-role/:id')
+    async changeRole(@Param('id') id:string, @Req() req:Request) {
+        const {role} = req.body;
+        return this.staffService.updateRole(id,role);
+    }
+
+    
 }

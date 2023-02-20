@@ -19,4 +19,5 @@ export class CreateStaffDto{
     departmentId: Types.ObjectId;
     managerId: Types.ObjectId;
     office_equiqmentId: Types.ObjectId;
+    roleId:Types.ObjectId;
 }

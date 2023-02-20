@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { StaffModule } from './staff/staff.module';
 import { AuthModule } from './auth/auth.module';
+import { RoleModule } from './role/role.module';
 import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
@@ -14,7 +15,9 @@ import * as redisStore from 'cache-manager-redis-store';
       store: redisStore,
       host: 'localhost',
       port: 6379, 
+      db: 0,
+      ttl: 600,
     }
-    ),StaffModule, AuthModule],
+    ),StaffModule, AuthModule, RoleModule],
 })
 export class AppModule {}

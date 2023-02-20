@@ -1,0 +1,36 @@
+// MongoDB Playground
+// Use Ctrl+Space inside a snippet or a string literal to trigger completions.
+
+// The current database to use.
+use('test');
+
+// db.staffs.find({}).pretty();
+// db.roles.find({}).pretty();
+
+db.staffs.aggregate([
+  {
+    $match:{
+      _id:new ObjectId("63eafc0423db5ee55ec0a64d")
+    }
+  },
+  {
+    $lookup:{
+      from:"roles",
+      localField:"roleId",
+      foreignField:"_id",
+      as:"roles"
+    }
+  },
+  {
+    $project:{
+      roleId:0,
+      roles:{
+        _id:0,
+        createdAt:0,
+        updatedAt:0,
+        __v:0
+      }
+    }
+  }
+  
+])
