@@ -1,0 +1,1 @@
+JavaScript is a single-threaded, non-blocking, asynchronous

@@ -1,31 +1,12 @@
-// let order = (fruitName, callback) => {
-//     console.log(`I want to order ${fruitName}`);
-//     callback();
-// };
 
-// let production = () => {
-//     console.log('Production has started');
-// };
+const sum=(a,b)=>a+b;
 
-// order("Apple", production);
+const mul=(a,b)=>a*b;
 
-// Callback hell
+const div=(a,b)=>a/b;
 
-let order = (fruitName, callback) => {
-  console.log(`I want to order ${fruitName}`);
-  callback();
-};
+const sub=(a,b)=>a-b;
 
-let production = () => {
-  setTimeout(() => {
-    console.log("Production has started");
-    setTimeout(() => {
-      console.log("Production has finished");
-      setTimeout(() => {
-        console.log("The product has been delivered");
-      }, 2000);
-    }, 2000);
-  }, 3000);
-};
+const calc=(a,b,op)=>op(a,b);
 
-order("Apple", production);
+console.log(calc(10,20,sum));
