@@ -7,9 +7,10 @@ import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
 import { StaffModule } from 'src/staff/staff.module';
 import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [JwtModule.register({}),StaffModule,PassportModule],
+  imports: [JwtModule.register({}),StaffModule,PassportModule,MailModule],
   controllers: [AuthController],
   providers: [AuthService,AccessTokenStrategy,RefreshTokenStrategy,ConfigService]
 })

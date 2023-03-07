@@ -1,14 +1,20 @@
-import { Body, CacheInterceptor, CacheKey, CacheTTL, Controller, Delete, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, CacheInterceptor, CacheKey, CacheTTL, Controller, Delete, Get, Param, Patch, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags,ApiCreatedResponse,ApiQuery, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+
 import { Request } from 'express';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 
 import { CreateStaffDto } from './dto/create-staff.dto';
+import { UpdateStaffDto } from './dto/update-staff.dto';
 import { StaffService } from './staff.service';
 
+@ApiTags('staffs')
 @Controller('staff')
+@ApiBearerAuth('jwt')
+@UseGuards(AccessTokenGuard)
 export class StaffController {
 
     constructor(private readonly staffService:StaffService) { }
@@ -16,25 +22,37 @@ export class StaffController {
     @Post()
     @UseInterceptors(FileInterceptor('image'))
     async createStaff(@UploadedFile() file, @Body() createStaffDto:CreateStaffDto) {
+        if(!file) return this.staffService.create(createStaffDto);
         const imageUrl = await this.staffService.upload(file);
         console.log('img',imageUrl);
-        createStaffDto.image = imageUrl.Location;
+        if(imageUrl){
+            createStaffDto.image = imageUrl.Location;
+        }
         return this.staffService.create(createStaffDto);
     }
 
     // @UseInterceptors(CacheInterceptor)
     // @CacheKey('staffAll')
     // @CacheTTL(30)
-    @Roles('ADMIN')
-    @UseGuards(AccessTokenGuard,RolesGuard)    
+    // @Roles('ADMIN')
+    // @UseGuards(AccessTokenGuard,RolesGuard)    
+    
+    @ApiBearerAuth()
+    @UseGuards(AccessTokenGuard)
     @Get()
     async findAll(@Req() req:Request) {
         return this.staffService.findAll();
     }
 
     @Get(':id')
+    @ApiCreatedResponse({description:'get by id'})
     async findById(@Param('id') id:string) {
+       try {
         return this.staffService.findById(id);
+       } catch (error) {
+        console.log("error",error.message);
+        return error.message;
+       }
     }
 
     @Get(':email')
@@ -43,7 +61,7 @@ export class StaffController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id:string, @Body() updateStaffDto:CreateStaffDto) {
+    async update(@Param('id') id:string, @Body() updateStaffDto: UpdateStaffDto ) {
         return this.staffService.update(id, updateStaffDto);
     }
 
@@ -54,6 +72,7 @@ export class StaffController {
     }
 
     @Patch('active/:id')
+    @ApiCreatedResponse({description:'active'})
     async active(@Param('id') id:string, @Req() req:Request) {
         const {isActived} = req.body;
         return this.staffService.updateIsActived(id,isActived);
@@ -70,6 +89,15 @@ export class StaffController {
     async changeRole(@Param('id') id:string, @Req() req:Request) {
         const {role} = req.body;
         return this.staffService.updateRole(id,role);
+    }
+
+    @ApiQuery({name:'name',required:false})
+    @ApiQuery({name:'email',required:false})
+    @ApiQuery({name:'phone',required:false})
+    @ApiQuery({name:'role',required:false})    
+    @Get('filter/all')
+    async filter( @Req() req:Request ) {
+        return this.staffService.filter(req.query);
     }
 
     

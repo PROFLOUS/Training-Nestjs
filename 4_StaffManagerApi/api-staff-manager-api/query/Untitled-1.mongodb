@@ -7,30 +7,255 @@ use('test');
 // db.staffs.find({}).pretty();
 // db.roles.find({}).pretty();
 
-db.staffs.aggregate([
-  {
-    $match:{
-      _id:new ObjectId("63eafc0423db5ee55ec0a64d")
-    }
-  },
-  {
-    $lookup:{
-      from:"roles",
-      localField:"roleId",
-      foreignField:"_id",
-      as:"roles"
-    }
-  },
-  {
-    $project:{
-      roleId:0,
-      roles:{
-        _id:0,
-        createdAt:0,
-        updatedAt:0,
-        __v:0
-      }
-    }
-  }
+// db.staffs.aggregate([
+//   {
+//     $lookup:{
+//       from:"roles",
+//       localField:"roleId",
+//       foreignField:"_id",
+//       as:"roles"
+//     }
+//   },
+//   {
+//     $lookup:{
+//       from:"departments",
+//       localField:"departmentId",
+//         foreignField:"_id",
+//         as:"departments"
+//     }
+//   },
+//   {
+//     $lookup:{
+//         from:"staffs",
+//         localField:"managerId",
+//         foreignField:"_id",
+//         as:"manager"
+//     }
+//   }
   
-])
+// ])
+
+
+
+
+
+// db.staffs.aggregate([
+  
+//   {
+//     $match:{
+     
+//     }
+//   },
+//   {
+//     $lookup:{
+//       from:"roles",
+//       localField:"roleId",
+//       foreignField:"_id",
+//       as:"roles"
+//     }
+//   },
+//   {
+//     $project:{
+//       roleId:0,
+//       roles:{
+//         _id:0,
+//         createdAt:0,
+//         updatedAt:0,
+//         __v:0
+//       }
+//     }
+//   }
+  
+// ])
+
+// db.staffs.getIndexes()
+
+// db.staffs.find({
+//   $text:{
+//     $search:"dang@gmail.com"
+//   }
+// })
+
+
+// fiter by name or email
+
+// db.staffs.find({
+//   $or:[
+//     {
+//       name:""
+//     },
+//     {
+//       email:/dang/i
+//     }
+//   ]
+// })
+
+// filter by name or email with aggregation
+
+// db.staffs.aggregate([
+  
+//   {
+//     $lookup:{
+//       from:"roles",
+//       localField:"roleId",
+//       foreignField:"_id",
+//       as:"roles"
+//     }
+//   },
+//   {
+//     $match:{
+//       $or:[
+//         {
+//           name:/null/i
+//         },
+//         {
+//           email:/dang/i
+//         },
+//         {
+//           phone:/null/i
+//         },
+//         {
+//           'roles.nameRole':/null/i
+//         }
+//       ]
+//     }
+//   },
+//   {
+//     $project:{
+//       roleId:0,
+//       roles:{
+//         _id:0,
+//         createdAt:0,
+//         updatedAt:0,
+//         __v:0
+//       }
+//     }
+//   }
+
+
+
+// db.clockings.updateOne(
+//     {
+//         _id:new ObjectId("63eafc0423db5ee55ec0a64d"),
+//         'clockings.clockOut': {$exists : false}
+//     },
+//     {$set: {'clockings.clockOut': '2:00'}}
+// )
+
+// db.clockings.find()
+
+// db.clockings.update(
+//     {staffId:new ObjectId("63eafc0423db5ee55ec0a64d")},
+//     {$set:{clockOut: '1:00'}}
+// )
+
+
+// db.clockings.find({ "$expr": { "$eq": [{ "$month": "$clockDate" }, 2] } })
+
+
+// db.premmissionforms.find({
+//   $and:[
+    
+//     { "$expr": 
+//       {"$or":[
+//         { "$eq": [{ "$month": "$startDate" }, 3] },
+//         { "$eq": [{ "$month": "$endDate" }, 3] }
+//       ]} 
+//     },
+//     { "$expr": {"$or":[
+//         { "$eq": [{ "$year": "$startDate" }, 2023] },
+//         { "$eq": [{ "$year": "$endDate" }, 2023] }
+//       ]}  
+//     }
+//   ]
+//  })
+
+// db.premmissionforms.find({
+//   $and:[
+//     {staffId:'63fda33c0dc621c1fdfed731'},
+//     { "$expr": 
+//       {"$or":[
+//         { "$eq": [{ "$month": "$startDate" }, 3] },
+//         { "$eq": [{ "$month": "$endDate" }, 3] }
+//       ]} 
+//     },
+//     { "$expr": 
+//       {"$or":[
+//         { "$eq": [{ "$year": "$startDate" }, 2023] },
+//         { "$eq": [{ "$year": "$endDate" }, 2023] }
+//       ]}  
+//     },
+//     {status:"rejected"}
+//   ]
+// })
+
+// db.premmissionforms.aggregate([
+//   {
+//     $match:{
+//       $and:[
+//         {staffId:new ObjectId("63fda33c0dc621c1fdfed731")},
+//         { "$expr": 
+//           {"$or":[
+//             { "$eq": [{ "$month": "$startDate" }, 3] },
+//             { "$eq": [{ "$month": "$endDate" }, 3] }
+//           ]} 
+//         },
+//         { "$expr": 
+//           {"$or":[
+//             { "$eq": [{ "$year": "$startDate" }, 2023] },
+//             { "$eq": [{ "$year": "$endDate" }, 2023] }
+//           ]}  
+//         },
+//       ]
+//     }
+//   },
+//   {
+//     $lookup:{
+//       from:"staffs",
+//       localField:"staffId",
+//       foreignField:"_id",
+//       as:"staff"
+//     }
+//   },
+//   {
+//     $lookup:{
+//       from:"staffs",
+//       localField:"approverId",
+//       foreignField:"_id",
+//       as:"staff_approver"
+//     }
+//   },
+//   {
+//     $project:{
+//       _id:1,
+//       sendDate:1,
+//       startDate:1,
+//       endDate:1,
+//       reason:1,
+//       status:1,
+//       type:1,
+//       image:1,
+//       approverComment:1,
+//       approverDate:1,
+//       staff:{
+//         _id:1,
+//         name:1,
+//       },
+//       staff_approver:{
+//         _id:1,
+//         name:1,
+//       }
+//     }
+//   }
+
+// ])
+
+// db.premmissionforms.find(
+//     { "status": "Approved" }
+// ).explain("executionStats")
+
+// db.premmissionforms.getIndexes()
+
+db.staffs.updateOne(
+  {_id:}
+)

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model,Types } from 'mongoose';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -17,7 +17,7 @@ export class StaffService {
     ) {}
 
     async create(createStaffDto: CreateStaffDto): Promise<StaffDocument> {
-        const {level,roleId}=createStaffDto;
+        const {level,roleId,departmentId,managerId}=createStaffDto;
         if(level==1){
             createStaffDto.max_absence=5;
         }
@@ -34,105 +34,118 @@ export class StaffService {
             createStaffDto.max_absence=3;
         }
 
-        var role = new  Types.ObjectId(roleId);
+        const role = new  Types.ObjectId(roleId);
+        const department = new Types.ObjectId(departmentId);
+        const manager = new Types.ObjectId(managerId);
         console.log(role);
         createStaffDto.roleId=role;
+        createStaffDto.departmentId=department;
+        createStaffDto.managerId=manager;
         const createdStaff = new this.staffModel(createStaffDto);
         return createdStaff.save();
     }
 
     async findAll(): Promise<StaffDocument[]> {        
-        const data = await this.staffModel.aggregate([
-            {
-                $lookup:{
-                  from:"roles",
-                  localField:"roleId",
-                  foreignField:"_id",
-                  as:"roles"
-                }
-              },
-              {
-                $unwind:"$roles"
-              },
-              {
-                $project:{
-                  roleId:0,
-                  roles:{
-                    _id:0,
-                    createdAt:0,
-                    updatedAt:0,
-                    __v:0
-                  }
-                }
-              }
-        ]);
-
-        return data;
+        return await this.staffModel.find()
+        .populate('roleId',{_id:1,nameRole:1})
+        .populate('departmentId',{_id:1,name:1})
+        .populate('managerId',{_id:1,name:1})
+        .exec();
     }
 
     async findById(id: string): Promise<any> {
-        const data = await this.staffModel.aggregate([
-            {
-                $match:{
-                  _id:new ObjectId(id)
-                }
-              },
-              {
-                $lookup:{
-                  from:"roles",
-                  localField:"roleId",
-                  foreignField:"_id",
-                  as:"roles"
-                }
-              },
-              {
-                $project:{
-                  roleId:0,
-                  roles:{
-                    _id:0,
-                    createdAt:0,
-                    updatedAt:0,
-                    __v:0
-                  }
-                }
-              }
-        ]);
-
-        return data;
+      return await this.staffModel
+       .findById(id)
+        .populate('roleId',{_id:1,nameRole:1})
+        .populate('departmentId',{_id:1,name:1})
+        .populate('managerId',{_id:1,name:1})
+        .exec(); 
     }
 
     async findByEmail(email: string): Promise<any> {
-        const data = await this.staffModel.aggregate([
-            {
-                $match:{
-                  email: email
-                }
-              },
-              {
-                $lookup:{
-                  from:"roles",
-                  localField:"roleId",
-                  foreignField:"_id",
-                  as:"roles"
-                }
-              },
-              {
-                $unwind:"$roles"
-              },
-              {
-                $project:{
-                  roleId:0,
-                  roles:{
-                    _id:0,
-                    createdAt:0,
-                    updatedAt:0,
-                    __v:0
-                  }
-                }
-              }
-        ]);
+        return await this.staffModel
+        .findOne({email:email})
+        .populate('roleId',{_id:1,nameRole:1})
+        .populate('departmentId',{_id:1,name:1})
+        .populate('managerId',{_id:1,name:1})
+        .exec();
+    }
 
-        return data;
+    async filter (filter: any): Promise<any> {
+        const {name,email,phone,role}=filter;
+        const queryRegxName = new RegExp(name,'i');
+        const queryRegxEmail = new RegExp(email,'i');
+        const queryRegxPhone = new RegExp(phone,'i');
+        const queryRegxRole = new RegExp(role,'i');
+
+        return await this.staffModel.find({
+            $or:[
+                {name:queryRegxName},
+                {email:queryRegxEmail},
+                {phone:queryRegxPhone},
+                {'roleId.nameRole':queryRegxRole}
+            ],
+        })
+        .populate('roleId',{_id:1,nameRole:1})
+        .populate('departmentId',{_id:1,name:1})
+        .populate('managerId',{_id:1,name:1})
+        .exec();
+
+      // let name = filter.name === undefined ? null : filter.name;
+      // let email = filter.email=== undefined ? null : filter.email;
+      // let phone = filter.phone === undefined ? null : filter.phone;
+      // let role = filter.role=== undefined ? null : filter.role;
+      // let regexName = new RegExp(name,'i');
+      // let regexEmail = new RegExp(email , 'i');
+      // let regexPhone = new RegExp(phone, 'i');
+      // let regexRole = new RegExp(role, 'i');
+
+      //   const data = await this.staffModel.aggregate([
+      //     {
+      //       $lookup:{
+      //         from:"roles",
+      //         localField:"roleId",
+      //         foreignField:"_id",
+      //         as:"roles"
+      //       }
+      //     },
+      //     {
+      //       $match:{
+      //         $or:[
+      //           {
+      //             name: regexName
+      //           },
+      //           {
+      //             email:regexEmail
+      //           },
+      //           {
+      //             phone: regexPhone
+      //           },
+      //           {
+      //             'roles.nameRole': regexRole
+      //           }
+      //         ]
+      //       }
+      //     },
+      //     {
+      //       $project:{
+      //         roleId:0,
+      //         roles:{
+      //           _id:0,
+      //           createdAt:0,
+      //           updatedAt:0,
+      //           __v:0
+      //         }
+      //       }
+      //     }
+      //   ]);
+
+      //   if(data.length==0){
+      //     throw new NotFoundException('Not found');
+      //   }
+
+
+      //   return data;
     }
 
     async getRoleName(id: string): Promise<StaffDocument> {
@@ -146,7 +159,6 @@ export class StaffService {
             phone: updateStaffDto.phone,
             address: updateStaffDto.address,
             dob: updateStaffDto.dob,
-            gender: updateStaffDto.gender,
             image: updateStaffDto.image,
 
         };
@@ -194,6 +206,43 @@ export class StaffService {
       return this.staffModel.findByIdAndUpdate(id,{password:hashedPassword})
     }
 
+    async updateOEquipment(id: string, oefsId:any): Promise<any> {
+      return await this.staffModel.update(
+        {_id:new Types.ObjectId(id)},
+        {officeEquiqmentForStaff: new Types.ObjectId(oefsId)},
+      );
+    }
+
+    async updateOEquipmentRemove(id: string, oEquipment:any): Promise<any> {
+      return await this.staffModel.updateOne(
+        {_id:new Types.ObjectId(id)},
+        {$pull:{officeEquiqments:oEquipment}}
+      );
+    }
+
+    async updateOEquipmentRemoveAll(id: string): Promise<any> {
+      return await this.staffModel.updateOne(
+        {_id:new Types.ObjectId(id)},
+        {$set:{officeEquiqments:[]}}
+      );
+    }
+
+    async updateOEquipmentUpdate(id: string, oEquipment:any): Promise<any> {
+      return await this.staffModel.updateOne(
+        {_id: new Types.ObjectId(id),"officeEquiqments.oEId":new Types.ObjectId(oEquipment.oEId)},
+        {$set:{"officeEquiqments.$.qty":oEquipment.qty}}
+      );
+    }
+
+    async updateStatusOEquipment(id: string, oEquipment:any): Promise<any> {
+      return await this.staffModel.updateOne(
+        {_id: new Types.ObjectId(id),"officeEquiqments.oEId":new Types.ObjectId(oEquipment.oEId)},
+        {$set:{"officeEquiqments.$.status":oEquipment.status}}
+      );
+    }
+
+    
+
     // async filterStaff(data): Promise<StaffDocument[]> {
 
         
@@ -208,7 +257,7 @@ export class StaffService {
         return data;
     }
 
-    async uploadS3(file, bucket, name) {
+    async uploadS3(file, bucket, name): Promise<any> {
         const s3 = this.getS3();
         const params = {
             Bucket: bucket,
@@ -227,12 +276,14 @@ export class StaffService {
         });
     }
 
-    getS3() {
+    getS3(): S3 {
         return new S3({
             region:process.env.AWS_BUCKET_REGION,
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
             secretAccessKey: process.env.AWS_SECRET_KEY_ID,
         });
     }
+
+    
 
 }
